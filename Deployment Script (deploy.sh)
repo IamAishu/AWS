@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Define variables
+STACK_NAME=my-simple-webapp-stack
+TEMPLATE_FILE=cloudformation-template.yml
+
+# Deploy the CloudFormation stack
+aws cloudformation create-stack --stack-name $STACK_NAME --template-body file://$TEMPLATE_FILE
+
+# Wait for the stack to be created
+aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
+
+# Get the output of the stack creation
+aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[0].OutputValue' --output text
