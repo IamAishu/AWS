@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A simple prototype with EC2 and S3
+
+Resources:
+  MyBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: my-simple-webapp-bucket
+
+  MyInstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'ec2.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+
+  MyInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Roles:
+        - Ref: MyInstanceRole
+
+  MyEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0abcdef1234567890 # Replace with a valid AMI ID
+      KeyName: my-key-pair # Replace with your key pair name
+      IamInstanceProfile: !Ref MyInstanceProfile
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y
+          yum install -y httpd
+          echo "Hello, World!" > /var/www/html/index.html
+          service httpd start
+          chkconfig httpd on
+
+Outputs:
+  WebsiteURL:
+    Description: "URL for the sample website"
+    Value: !Sub 'http://${MyEC2Instance.PublicIp}'
